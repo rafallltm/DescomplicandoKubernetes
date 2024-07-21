@@ -1,5 +1,5 @@
 
-# Descomplicando o Kubernetes com kubeadm
+# Descomplicando o Kubernetes - kubeadm
 
 Estas instruções são para o Kubernetes v1.3.
 
@@ -113,6 +113,9 @@ sudo systemctl status containerd
 sudo systemctl enable --now kubelet
 ```
 
+Liberar as portas:
+TCP 6443, 10250-10255 e 6783
+
 ## Inicializando o Cluster no k1
 
 Desative a transmissão para todos os terminais no Terminator. Verifique o endereço IP da interface de rede:
@@ -123,11 +126,35 @@ ip a
 
 Copie o endereço IP da interface (exemplo: `10.145.242.77`). Inicialize o cluster:
 
+
 ```sh
-sudo kubeadm init --pod-network-cidr=10.10.0.0/16 --apiserver-advertise-address=<IP COPIADO>
+sudo kubeadm init --pod-network-cidr=10.10.0.0/16 --apiserver-advertise-address=10.145.242.77
+```
+```
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 10.145.242.77:6443 --token uz5hre.fo7jzosl78mdycke \
+	--discovery-token-ca-cert-hash sha256:cef31a0816282ba38ad749469e4a20687a3b6b84fa3dfd3d29d03c5d7d20f52a 
 ```
 
-Anote a saída do token que será utilizado para adicionar os nós de trabalho k2 e k3. Configure o cluster para o usuário atual: Copie e cole esse comando em seu terminal:
+
+Anote a saída do token que será utilizado para adicionar os nós de trabalho k2 e k3. Configure o cluster para o usuário atual, copie e cole esse comando em seu terminal:
 
 ```sh
 mkdir -p $HOME/.kube
@@ -146,7 +173,8 @@ kubectl config view
 Nos nós k2 e k3, execute o comando `kubeadm join` que foi gerado na inicialização do cluster no k1. Por exemplo:
 
 ```sh
-sudo kubeadm join 10.145.242.77:6443 --token <token> --discovery-token-ca-cert-hash <hash>
+sudo kubeadm join 10.145.242.77:6443 --token uz5hre.fo7jzosl78mdycke \
+	--discovery-token-ca-cert-hash sha256:cef31a0816282ba38ad749469e4a20687a3b6b84fa3dfd3d29d03c5d7d20f52a 
 ```
 
 ## Verificando os Nós
